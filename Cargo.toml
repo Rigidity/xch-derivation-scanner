@@ -1,0 +1,15 @@
+[package]
+name = "script-for-brandt"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.89"
+chia = "0.13.0"
+chia-wallet-sdk = { version = "0.16.0", features = ["rustls"] }
+clvmr = "0.9.0"
+hex = "0.4.3"
+hex-literal = "0.4.1"
+indexmap = "2.6.0"
+rayon = "1.10.0"
+tokio = { version = "1.40.0", features = ["full"] }
