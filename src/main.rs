@@ -24,7 +24,7 @@ async fn main() -> anyhow::Result<()> {
 
     println!("Connected to peer {}", peer.socket_addr());
 
-    let master_pk = PublicKey::from_bytes(&hex!("000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"))?;
+    let master_pk = PublicKey::from_bytes(&hex!(""))?;
     let intermediate_pk = master_to_wallet_unhardened_intermediate(&master_pk);
 
     let puzzle_hashes: IndexMap<Bytes32, u32> = (0..5000)
@@ -79,35 +79,42 @@ async fn main() -> anyhow::Result<()> {
             / 1e12
     );
 
-    let used_puzzle_hashes: HashSet<Bytes32> = coin_states
-        .into_iter()
-        .map(|coin_state| coin_state.coin.puzzle_hash)
-        .collect();
+    for spent in [false, true] {
+        let used_puzzle_hashes: HashSet<Bytes32> = coin_states
+            .iter()
+            .filter(|coin_state| coin_state.spent_height.is_some() == spent)
+            .map(|coin_state| coin_state.coin.puzzle_hash)
+            .collect();
 
-    let mut used_indices = used_puzzle_hashes
-        .iter()
-        .filter_map(|puzzle_hash| puzzle_hashes.get(puzzle_hash).copied())
-        .collect::<Vec<_>>();
+        let mut used_indices = used_puzzle_hashes
+            .iter()
+            .filter_map(|puzzle_hash| puzzle_hashes.get(puzzle_hash).copied())
+            .collect::<Vec<_>>();
 
-    used_indices.sort();
+        used_indices.sort();
 
-    let mut range_start = used_indices[0];
-    let mut range_current = range_start;
-    let mut ranges = Vec::new();
+        let mut range_start = used_indices[0];
+        let mut range_current = range_start;
+        let mut ranges = Vec::new();
 
-    for index in used_indices {
-        if index == range_start || index == range_current + 1 {
-            range_current += 1;
-        } else {
-            ranges.push(range_start..range_current);
-            range_start = index;
-            range_current = index;
+        for index in used_indices {
+            if index == range_start || index == range_current + 1 {
+                range_current += 1;
+            } else {
+                ranges.push(range_start..range_current);
+                range_start = index;
+                range_current = index;
+            }
         }
+
+        ranges.push(range_start..range_current);
+
+        println!(
+            "{:?} are {}",
+            ranges,
+            if spent { "spent" } else { "unspent" }
+        );
     }
-
-    ranges.push(range_start..range_current);
-
-    println!("{:?}", ranges);
 
     Ok(())
 }
