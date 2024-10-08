@@ -98,7 +98,8 @@ async fn main() -> anyhow::Result<()> {
         let mut ranges = Vec::new();
 
         for index in used_indices {
-            if index == range_start || index == range_current + 1 {
+            if index == range_start {
+            } else if index == range_current + 1 {
                 range_current += 1;
             } else {
                 ranges.push(range_start..range_current);
